@@ -1,75 +1,244 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, TextInput, Button, Platform, ScrollView, Alert } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Notifications from 'expo-notifications';
+import * as Camera from 'expo-camera';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
 
-export default function HomeScreen() {
+// Set the notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// Define the reminder type
+export type PhotoReminder = {
+  id: string;
+  startTime: Date;
+  duration: number; // in minutes
+  interval: number; // in minutes
+  notificationIds: string[];
+};
+
+export default function IndexScreen() {
+  const [startTime, setStartTime] = useState(new Date());
+  const [duration, setDuration] = useState('30');
+  const [interval, setInterval] = useState('5');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Request permissions on app start
+  useEffect(() => {
+    async function requestPermissions() {
+      const { status: notificationStatus } = await Notifications.requestPermissionsAsync();
+      if (notificationStatus !== 'granted') {
+        Alert.alert('通知の許可が必要です', '写真リマインダーを使用するには通知の許可が必要です。');
+      }
+
+      const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
+      if (cameraStatus !== 'granted') {
+        Alert.alert('カメラの許可が必要です', '写真リマインダーを使用するにはカメラの許可が必要です。');
+      }
+    }
+
+    requestPermissions();
+
+    // Set up notification response handler
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      // Open camera when notification is tapped
+      openCamera();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const openCamera = async () => {
+    if (Platform.OS === 'web') {
+      alert('カメラ機能はモバイルデバイスでのみ利用可能です');
+      return;
+    }
+
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    if (status === 'granted') {
+      // On mobile, we can use expo-camera to open the camera
+      await Camera.openCameraAsync({
+        quality: 1,
+      });
+    } else {
+      Alert.alert('カメラの許可が必要です', '写真を撮るにはカメラの許可が必要です。');
+    }
+  };
+
+  const schedulePhotoReminders = async () => {
+    // Validate inputs
+    const durationMinutes = parseInt(duration);
+    const intervalMinutes = parseInt(interval);
+
+    if (isNaN(durationMinutes) || durationMinutes <= 0) {
+      Alert.alert('エラー', '有効な時間（分）を入力してください');
+      return;
+    }
+
+    if (isNaN(intervalMinutes) || intervalMinutes <= 0) {
+      Alert.alert('エラー', '有効な通知間隔（分）を入力してください');
+      return;
+    }
+
+    if (intervalMinutes > durationMinutes) {
+      Alert.alert('エラー', '通知間隔は合計時間より短くする必要があります');
+      return;
+    }
+
+    // Cancel any existing notifications
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    // Calculate how many notifications to schedule
+    const notificationCount = Math.floor(durationMinutes / intervalMinutes);
+    const notificationIds: string[] = [];
+
+    // Schedule notifications
+    for (let i = 0; i < notificationCount; i++) {
+      const notificationTime = new Date(startTime);
+      notificationTime.setMinutes(notificationTime.getMinutes() + (i * intervalMinutes));
+
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "写真を撮る時間です！",
+          body: "タップしてカメラを開きます",
+          sound: true,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: notificationTime,
+        },
+      });
+
+      notificationIds.push(id);
+    }
+
+    // Save the reminder to storage
+    const reminder: PhotoReminder = {
+      id: Date.now().toString(),
+      startTime: new Date(startTime),
+      duration: durationMinutes,
+      interval: intervalMinutes,
+      notificationIds,
+    };
+
+    try {
+      // Get existing reminders
+      const existingRemindersJson = await AsyncStorage.getItem('photoReminders');
+      const existingReminders: PhotoReminder[] = existingRemindersJson 
+        ? JSON.parse(existingRemindersJson) 
+        : [];
+
+      // Add new reminder
+      const updatedReminders = [...existingReminders, reminder];
+
+      // Save back to storage
+      await AsyncStorage.setItem('photoReminders', JSON.stringify(updatedReminders));
+
+      Alert.alert(
+        '設定完了',
+        `${startTime.toLocaleTimeString()}から${durationMinutes}分間、${intervalMinutes}分ごとに通知します。`
+      );
+    } catch (error) {
+      console.error('Failed to save reminder:', error);
+      Alert.alert('エラー', '設定の保存に失敗しました');
+    }
+  };
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setStartTime(selectedDate);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ThemedText type="title" style={styles.title}>写真リマインダー設定</ThemedText>
+
+        <View style={styles.formGroup}>
+          <ThemedText style={styles.label}>開始時間:</ThemedText>
+          <Button 
+            title={startTime.toLocaleTimeString()} 
+            onPress={() => setShowDatePicker(true)} 
+          />
+          {showDatePicker && (
+            <DateTimePicker
+              value={startTime}
+              mode="time"
+              is24Hour={true}
+              display="default"
+              onChange={onChangeDate}
+            />
+          )}
+        </View>
+
+        <View style={styles.formGroup}>
+          <ThemedText style={styles.label}>合計時間 (分):</ThemedText>
+          <TextInput
+            style={styles.input}
+            value={duration}
+            onChangeText={setDuration}
+            keyboardType="number-pad"
+            placeholder="30"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <ThemedText style={styles.label}>通知間隔 (分):</ThemedText>
+          <TextInput
+            style={styles.input}
+            value={interval}
+            onChangeText={setInterval}
+            keyboardType="number-pad"
+            placeholder="5"
+          />
+        </View>
+
+        <Button 
+          title="リマインダーを設定" 
+          onPress={schedulePhotoReminders} 
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
+  scrollContent: {
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    fontSize: 16,
   },
 });
+
