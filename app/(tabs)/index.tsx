@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Platform, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Button, Platform, ScrollView, Alert, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications';
 import * as Camera from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 // Set the notification handler
 Notifications.setNotificationHandler({
@@ -26,11 +27,26 @@ export type PhotoReminder = {
   notificationIds: string[];
 };
 
+const formatTime = (date: Date) => {
+  if (Platform.OS === 'android') {
+    return date.toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } else {
+    // iOS uses different locales
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+};
+
 export default function IndexScreen() {
   const [startTime, setStartTime] = useState(new Date());
   const [duration, setDuration] = useState('30');
   const [interval, setInterval] = useState('5');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState<'date' | 'time'>('date');
 
   // Request permissions on app start
   useEffect(() => {
@@ -135,8 +151,8 @@ export default function IndexScreen() {
     try {
       // Get existing reminders
       const existingRemindersJson = await AsyncStorage.getItem('photoReminders');
-      const existingReminders: PhotoReminder[] = existingRemindersJson 
-        ? JSON.parse(existingRemindersJson) 
+      const existingReminders: PhotoReminder[] = existingRemindersJson
+        ? JSON.parse(existingRemindersJson)
         : [];
 
       // Add new reminder
@@ -147,7 +163,7 @@ export default function IndexScreen() {
 
       Alert.alert(
         '設定完了',
-        `${startTime.toLocaleTimeString()}から${durationMinutes}分間、${intervalMinutes}分ごとに通知します。`
+        `${startTime.toLocaleDateString()} ${formatTime(startTime)}から${durationMinutes}分間、${intervalMinutes}分ごとに通知します。`
       );
     } catch (error) {
       console.error('Failed to save reminder:', error);
@@ -168,15 +184,35 @@ export default function IndexScreen() {
         <ThemedText type="title" style={styles.title}>写真リマインダー設定</ThemedText>
 
         <View style={styles.formGroup}>
-          <ThemedText style={styles.label}>開始時間:</ThemedText>
-          <Button 
-            title={startTime.toLocaleTimeString()} 
-            onPress={() => setShowDatePicker(true)} 
-          />
+          <ThemedText style={styles.label}>開始日時:</ThemedText>
+          <View style={styles.dateTimeRow}>
+            <Pressable
+              onPress={() => {
+                setDatePickerMode('date');
+                setShowDatePicker(true);
+              }}>
+              <ThemedView style={styles.dateTimeButton}>
+                <ThemedText style={styles.dateTimeText}>
+                  {startTime.toLocaleDateString()}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setDatePickerMode('time');
+                setShowDatePicker(true);
+              }}>
+              <ThemedView style={styles.dateTimeButton}>
+                <ThemedText style={styles.dateTimeText}>
+                  {formatTime(startTime)}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          </View>
           {showDatePicker && (
             <DateTimePicker
               value={startTime}
-              mode="time"
+              mode={datePickerMode}
               is24Hour={true}
               display="default"
               onChange={onChangeDate}
@@ -206,9 +242,9 @@ export default function IndexScreen() {
           />
         </View>
 
-        <Button 
-          title="リマインダーを設定" 
-          onPress={schedulePhotoReminders} 
+        <Button
+          title="リマインダーを設定"
+          onPress={schedulePhotoReminders}
         />
       </ScrollView>
     </ThemedView>
@@ -235,10 +271,30 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    gap: 12,
+  },
+  dateTimeButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateTimeText: {
+    fontSize: 16,
+  },
+  iconButton: {
+    padding: 8,
   },
 });
 
