@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import { PhotoReminder } from './index';
+import React, { useEffect, useState } from "react";
+import { StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { PhotoReminder } from "./index";
 
 export default function ScheduledScreen() {
   const [reminders, setReminders] = useState<PhotoReminder[]>([]);
@@ -15,21 +15,21 @@ export default function ScheduledScreen() {
 
   const loadReminders = async () => {
     try {
-      const remindersJson = await AsyncStorage.getItem('photoReminders');
+      const remindersJson = await AsyncStorage.getItem("photoReminders");
       if (remindersJson) {
         const parsedReminders: PhotoReminder[] = JSON.parse(remindersJson);
 
         // Convert string dates back to Date objects
-        const processedReminders = parsedReminders.map(reminder => ({
+        const processedReminders = parsedReminders.map((reminder) => ({
           ...reminder,
-          startTime: new Date(reminder.startTime)
+          startTime: new Date(reminder.startTime),
         }));
 
         setReminders(processedReminders);
       }
     } catch (error) {
-      console.error('Failed to load reminders:', error);
-      Alert.alert('エラー', 'リマインダーの読み込みに失敗しました');
+      console.error("Failed to load reminders:", error);
+      Alert.alert("エラー", "リマインダーの読み込みに失敗しました");
     }
   };
 
@@ -41,58 +41,71 @@ export default function ScheduledScreen() {
       }
 
       // Remove from state
-      const updatedReminders = reminders.filter(r => r.id !== reminder.id);
+      const updatedReminders = reminders.filter((r) => r.id !== reminder.id);
       setReminders(updatedReminders);
 
       // Save to storage
-      await AsyncStorage.setItem('photoReminders', JSON.stringify(updatedReminders));
+      await AsyncStorage.setItem(
+        "photoReminders",
+        JSON.stringify(updatedReminders)
+      );
     } catch (error) {
-      console.error('Failed to delete reminder:', error);
-      Alert.alert('エラー', 'リマインダーの削除に失敗しました');
+      console.error("Failed to delete reminder:", error);
+      Alert.alert("エラー", "リマインダーの削除に失敗しました");
     }
   };
 
   const confirmDelete = (reminder: PhotoReminder) => {
     Alert.alert(
-      'リマインダーを削除',
-      '本当にこのリマインダーを削除しますか？',
+      "リマインダーを削除",
+      "本当にこのリマインダーを削除しますか？",
       [
-        { text: 'キャンセル', style: 'cancel' },
-        { text: '削除', style: 'destructive', onPress: () => deleteReminder(reminder) }
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "削除",
+          style: "destructive",
+          onPress: () => deleteReminder(reminder),
+        },
       ]
     );
   };
 
   const renderReminderItem = ({ item }: { item: PhotoReminder }) => {
-    const startTimeStr = item.startTime.toLocaleTimeString();
+    const formatDateTime = (date: Date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const day = date.getDate().toString().padStart(2, "0");
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      return `${year}/${month}/${day} ${hours}:${minutes}`;
+    };
+
+    const startTimeStr = formatDateTime(item.startTime);
     const endTime = new Date(item.startTime);
     endTime.setMinutes(endTime.getMinutes() + item.duration);
-    const endTimeStr = endTime.toLocaleTimeString();
+    const endTimeStr = formatDateTime(endTime);
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.reminderItem}
         onLongPress={() => confirmDelete(item)}
       >
         <ThemedText type="defaultSemiBold" style={styles.reminderTime}>
-          {startTimeStr} - {endTimeStr}
+          {startTimeStr}
+          {"\n"}〜 {endTimeStr}
         </ThemedText>
-        <ThemedText>
-          合計時間: {item.duration}分
-        </ThemedText>
-        <ThemedText>
-          通知間隔: {item.interval}分ごと
-        </ThemedText>
-        <ThemedText style={styles.deleteHint}>
-          (長押しで削除)
-        </ThemedText>
+        <ThemedText>合計時間: {item.duration}分</ThemedText>
+        <ThemedText>通知間隔: {item.interval}分ごと</ThemedText>
+        <ThemedText style={styles.deleteHint}>(長押しで削除)</ThemedText>
       </TouchableOpacity>
     );
   };
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>設定済みリマインダー</ThemedText>
+      <ThemedText type="title" style={styles.title}>
+        設定済みリマインダー
+      </ThemedText>
 
       {reminders.length === 0 ? (
         <ThemedText style={styles.emptyMessage}>
@@ -102,7 +115,7 @@ export default function ScheduledScreen() {
         <FlatList
           data={reminders}
           renderItem={renderReminderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
         />
       )}
@@ -128,20 +141,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   reminderTime: {
     fontSize: 18,
     marginBottom: 5,
   },
   emptyMessage: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 40,
   },
   deleteHint: {
     fontSize: 12,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
 });

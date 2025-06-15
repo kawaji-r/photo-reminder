@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, TextInput, Button, Platform, ScrollView, Alert, Pressable } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import * as Notifications from 'expo-notifications';
-import * as Camera from 'expo-camera';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Button,
+  Platform,
+  ScrollView,
+  Alert,
+  Pressable,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Notifications from "expo-notifications";
+import * as Camera from "expo-camera";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 // Set the notification handler
 Notifications.setNotificationHandler({
@@ -28,47 +37,57 @@ export type PhotoReminder = {
 };
 
 const formatTime = (date: Date) => {
-  if (Platform.OS === 'android') {
-    return date.toLocaleTimeString('ja-JP', {
-      hour: '2-digit',
-      minute: '2-digit'
+  if (Platform.OS === "android") {
+    return date.toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } else {
     // iOS uses different locales
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
     return `${hours}:${minutes}`;
   }
 };
 
 export default function IndexScreen() {
   const [startTime, setStartTime] = useState(new Date());
-  const [duration, setDuration] = useState('30');
-  const [interval, setInterval] = useState('5');
+  const [duration, setDuration] = useState("30");
+  const [interval, setInterval] = useState("5");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [datePickerMode, setDatePickerMode] = useState<'date' | 'time'>('date');
+  const [datePickerMode, setDatePickerMode] = useState<"date" | "time">("date");
 
   // Request permissions on app start
   useEffect(() => {
     async function requestPermissions() {
-      const { status: notificationStatus } = await Notifications.requestPermissionsAsync();
-      if (notificationStatus !== 'granted') {
-        Alert.alert('通知の許可が必要です', '写真リマインダーを使用するには通知の許可が必要です。');
+      const { status: notificationStatus } =
+        await Notifications.requestPermissionsAsync();
+      if (notificationStatus !== "granted") {
+        Alert.alert(
+          "通知の許可が必要です",
+          "写真リマインダーを使用するには通知の許可が必要です。"
+        );
       }
 
-      const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
-      if (cameraStatus !== 'granted') {
-        Alert.alert('カメラの許可が必要です', '写真リマインダーを使用するにはカメラの許可が必要です。');
+      const { status: cameraStatus } =
+        await Camera.requestCameraPermissionsAsync();
+      if (cameraStatus !== "granted") {
+        Alert.alert(
+          "カメラの許可が必要です",
+          "写真リマインダーを使用するにはカメラの許可が必要です。"
+        );
       }
     }
 
     requestPermissions();
 
     // Set up notification response handler
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      // Open camera when notification is tapped
-      openCamera();
-    });
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        // Open camera when notification is tapped
+        openCamera();
+      }
+    );
 
     return () => {
       subscription.remove();
@@ -76,19 +95,22 @@ export default function IndexScreen() {
   }, []);
 
   const openCamera = async () => {
-    if (Platform.OS === 'web') {
-      alert('カメラ機能はモバイルデバイスでのみ利用可能です');
+    if (Platform.OS === "web") {
+      alert("カメラ機能はモバイルデバイスでのみ利用可能です");
       return;
     }
 
     const { status } = await Camera.requestCameraPermissionsAsync();
-    if (status === 'granted') {
+    if (status === "granted") {
       // On mobile, we can use expo-camera to open the camera
       await Camera.openCameraAsync({
         quality: 1,
       });
     } else {
-      Alert.alert('カメラの許可が必要です', '写真を撮るにはカメラの許可が必要です。');
+      Alert.alert(
+        "カメラの許可が必要です",
+        "写真を撮るにはカメラの許可が必要です。"
+      );
     }
   };
 
@@ -98,17 +120,17 @@ export default function IndexScreen() {
     const intervalMinutes = parseInt(interval);
 
     if (isNaN(durationMinutes) || durationMinutes <= 0) {
-      Alert.alert('エラー', '有効な時間（分）を入力してください');
+      Alert.alert("エラー", "有効な時間（分）を入力してください");
       return;
     }
 
     if (isNaN(intervalMinutes) || intervalMinutes <= 0) {
-      Alert.alert('エラー', '有効な通知間隔（分）を入力してください');
+      Alert.alert("エラー", "有効な通知間隔（分）を入力してください");
       return;
     }
 
     if (intervalMinutes > durationMinutes) {
-      Alert.alert('エラー', '通知間隔は合計時間より短くする必要があります');
+      Alert.alert("エラー", "通知間隔は合計時間より短くする必要があります");
       return;
     }
 
@@ -122,7 +144,9 @@ export default function IndexScreen() {
     // Schedule notifications
     for (let i = 0; i < notificationCount; i++) {
       const notificationTime = new Date(startTime);
-      notificationTime.setMinutes(notificationTime.getMinutes() + (i * intervalMinutes));
+      notificationTime.setMinutes(
+        notificationTime.getMinutes() + i * intervalMinutes
+      );
 
       const id = await Notifications.scheduleNotificationAsync({
         content: {
@@ -150,7 +174,8 @@ export default function IndexScreen() {
 
     try {
       // Get existing reminders
-      const existingRemindersJson = await AsyncStorage.getItem('photoReminders');
+      const existingRemindersJson =
+        await AsyncStorage.getItem("photoReminders");
       const existingReminders: PhotoReminder[] = existingRemindersJson
         ? JSON.parse(existingRemindersJson)
         : [];
@@ -159,15 +184,18 @@ export default function IndexScreen() {
       const updatedReminders = [...existingReminders, reminder];
 
       // Save back to storage
-      await AsyncStorage.setItem('photoReminders', JSON.stringify(updatedReminders));
+      await AsyncStorage.setItem(
+        "photoReminders",
+        JSON.stringify(updatedReminders)
+      );
 
       Alert.alert(
-        '設定完了',
+        "設定完了",
         `${startTime.toLocaleDateString()} ${formatTime(startTime)}から${durationMinutes}分間、${intervalMinutes}分ごとに通知します。`
       );
     } catch (error) {
-      console.error('Failed to save reminder:', error);
-      Alert.alert('エラー', '設定の保存に失敗しました');
+      console.error("Failed to save reminder:", error);
+      Alert.alert("エラー", "設定の保存に失敗しました");
     }
   };
 
@@ -179,9 +207,12 @@ export default function IndexScreen() {
   };
 
   // Get theme colors
-  const backgroundColor = useThemeColor({ light: 'rgba(255,255,255,0.9)', dark: 'rgba(30,30,30,0.9)' }, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({ light: '#ddd', dark: '#333' }, 'border');
+  const backgroundColor = useThemeColor(
+    { light: "rgba(255,255,255,0.9)", dark: "rgba(30,30,30,0.9)" },
+    "background"
+  );
+  const textColor = useThemeColor({}, "text");
+  const borderColor = useThemeColor({ light: "#ddd", dark: "#333" }, "border");
 
   // Create dynamic styles
   const dynamicStyles = {
@@ -199,17 +230,25 @@ export default function IndexScreen() {
   return (
     <ThemedView style={staticStyles.container}>
       <ScrollView contentContainerStyle={staticStyles.scrollContent}>
-        <ThemedText type="title" style={staticStyles.title}>写真リマインダー設定</ThemedText>
+        <ThemedText type="title" style={staticStyles.title}>
+          写真リマインダー設定
+        </ThemedText>
 
         <View style={staticStyles.formGroup}>
           <ThemedText style={staticStyles.label}>開始日時:</ThemedText>
           <View style={staticStyles.dateTimeRow}>
             <Pressable
               onPress={() => {
-                setDatePickerMode('date');
+                setDatePickerMode("date");
                 setShowDatePicker(true);
-              }}>
-              <ThemedView style={[staticStyles.dateTimeButton, dynamicStyles.dateTimeButton]}>
+              }}
+            >
+              <ThemedView
+                style={[
+                  staticStyles.dateTimeButton,
+                  dynamicStyles.dateTimeButton,
+                ]}
+              >
                 <ThemedText style={staticStyles.dateTimeText}>
                   {startTime.toLocaleDateString()}
                 </ThemedText>
@@ -217,10 +256,16 @@ export default function IndexScreen() {
             </Pressable>
             <Pressable
               onPress={() => {
-                setDatePickerMode('time');
+                setDatePickerMode("time");
                 setShowDatePicker(true);
-              }}>
-              <ThemedView style={staticStyles.dateTimeButton}>
+              }}
+            >
+              <ThemedView
+                style={[
+                  staticStyles.dateTimeButton,
+                  dynamicStyles.dateTimeButton,
+                ]}
+              >
                 <ThemedText style={staticStyles.dateTimeText}>
                   {formatTime(startTime)}
                 </ThemedText>
@@ -253,7 +298,7 @@ export default function IndexScreen() {
         <View style={staticStyles.formGroup}>
           <ThemedText style={staticStyles.label}>通知間隔 (分):</ThemedText>
           <TextInput
-            style={staticStyles.input}
+            style={[staticStyles.input, dynamicStyles.input]}
             value={interval}
             onChangeText={setInterval}
             keyboardType="number-pad"
@@ -261,10 +306,7 @@ export default function IndexScreen() {
           />
         </View>
 
-        <Button
-          title="リマインダーを設定"
-          onPress={schedulePhotoReminders}
-        />
+        <Button title="リマインダーを設定" onPress={schedulePhotoReminders} />
       </ScrollView>
     </ThemedView>
   );
@@ -295,7 +337,7 @@ const staticStyles = StyleSheet.create({
     fontSize: 16,
   },
   dateTimeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
     gap: 12,
   },
@@ -304,8 +346,8 @@ const staticStyles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   dateTimeText: {
     fontSize: 16,
@@ -314,4 +356,3 @@ const staticStyles = StyleSheet.create({
     padding: 8,
   },
 });
-
