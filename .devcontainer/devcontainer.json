@@ -1,0 +1,32 @@
+{
+  "name": "Sample Dev Container",
+  // 拡張性を持たせてdocker-composeを設定
+  "dockerComposeFile": ["../docker/docker-compose.yml"],
+  "service": "dev-container",
+  // DockerfileのWORKDIRに合わせる
+  "workspaceFolder": "/workspace",
+  "features": {
+    // NeovimとBashの機能を追加
+    "ghcr.io/duduribeiro/devcontainer-features/neovim:1": {},
+    "ghcr.io/devcontainers-extra/features/bash-command:1": {}
+  },
+  "mounts": [
+    // 現在のフォルダをワークスペースにマウント
+    "source=${localWorkspaceFolder},target=${containerWorkspaceFolder},type=bind,consistency=cached",
+    // Neovim 設定をコンテナ内にマウント
+    "source=${env:HOME}/.config/nvim,target=/home/node/.config/nvim,type=bind,consistency=cached",
+    // ホストとクリップボードの共有用
+    "source=/run/user/1000/wayland-0,target=/run/user/1000/wayland-0,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    // bashを使用
+    "SHELL": "/bin/bash",
+    // ホストとクリップボードの共有用
+    "WAYLAND_DISPLAY": "wayland-0",
+    "XDG_RUNTIME_DIR": "/run/user/1000",
+    "DISPLAY": "${env:DISPLAY}"
+  },
+  // ホストとクリップボードの共有用 etc...
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y wl-clipboard && echo 'set -o vi' >> ~/.bashrc",
+  "postStartCommand": "npm install"
+}

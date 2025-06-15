@@ -1,0 +1,26 @@
+services:
+  dev-container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-container
+    restart: unless-stopped
+    command: sleep infinity
+
+  development-build:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      target: development-build
+    env_file:
+      - ../.env
+    command: eas build --profile development --platform android
+
+  preview-build:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      target: preview-build
+    env_file:
+      - ../.env
+    command: eas build --profile preview --platform android
