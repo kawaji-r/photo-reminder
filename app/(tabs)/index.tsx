@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Platform, ScrollView, Alert, Pressable } from 'react-native';
+import { StyleSheet, View, TextInput, Button, Platform, ScrollView, Alert, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications';
 import * as Camera from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 // Set the notification handler
 Notifications.setNotificationHandler({
@@ -178,21 +178,39 @@ export default function IndexScreen() {
     }
   };
 
-  return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <ThemedText type="title" style={styles.title}>写真リマインダー設定</ThemedText>
+  // Get theme colors
+  const backgroundColor = useThemeColor({ light: 'rgba(255,255,255,0.9)', dark: 'rgba(30,30,30,0.9)' }, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({ light: '#ddd', dark: '#333' }, 'border');
 
-        <View style={styles.formGroup}>
-          <ThemedText style={styles.label}>開始日時:</ThemedText>
-          <View style={styles.dateTimeRow}>
+  // Create dynamic styles
+  const dynamicStyles = {
+    input: {
+      backgroundColor,
+      color: textColor,
+      borderColor,
+    },
+    dateTimeButton: {
+      backgroundColor,
+      borderColor,
+    },
+  };
+
+  return (
+    <ThemedView style={staticStyles.container}>
+      <ScrollView contentContainerStyle={staticStyles.scrollContent}>
+        <ThemedText type="title" style={staticStyles.title}>写真リマインダー設定</ThemedText>
+
+        <View style={staticStyles.formGroup}>
+          <ThemedText style={staticStyles.label}>開始日時:</ThemedText>
+          <View style={staticStyles.dateTimeRow}>
             <Pressable
               onPress={() => {
                 setDatePickerMode('date');
                 setShowDatePicker(true);
               }}>
-              <ThemedView style={styles.dateTimeButton}>
-                <ThemedText style={styles.dateTimeText}>
+              <ThemedView style={[staticStyles.dateTimeButton, dynamicStyles.dateTimeButton]}>
+                <ThemedText style={staticStyles.dateTimeText}>
                   {startTime.toLocaleDateString()}
                 </ThemedText>
               </ThemedView>
@@ -202,8 +220,8 @@ export default function IndexScreen() {
                 setDatePickerMode('time');
                 setShowDatePicker(true);
               }}>
-              <ThemedView style={styles.dateTimeButton}>
-                <ThemedText style={styles.dateTimeText}>
+              <ThemedView style={staticStyles.dateTimeButton}>
+                <ThemedText style={staticStyles.dateTimeText}>
                   {formatTime(startTime)}
                 </ThemedText>
               </ThemedView>
@@ -220,10 +238,11 @@ export default function IndexScreen() {
           )}
         </View>
 
-        <View style={styles.formGroup}>
-          <ThemedText style={styles.label}>合計時間 (分):</ThemedText>
+        <View style={staticStyles.formGroup}>
+          <ThemedText style={staticStyles.label}>合計時間 (分):</ThemedText>
           <TextInput
-            style={styles.input}
+            testID="duration-input"
+            style={[staticStyles.input, dynamicStyles.input]}
             value={duration}
             onChangeText={setDuration}
             keyboardType="number-pad"
@@ -231,10 +250,10 @@ export default function IndexScreen() {
           />
         </View>
 
-        <View style={styles.formGroup}>
-          <ThemedText style={styles.label}>通知間隔 (分):</ThemedText>
+        <View style={staticStyles.formGroup}>
+          <ThemedText style={staticStyles.label}>通知間隔 (分):</ThemedText>
           <TextInput
-            style={styles.input}
+            style={staticStyles.input}
             value={interval}
             onChangeText={setInterval}
             keyboardType="number-pad"
@@ -251,7 +270,7 @@ export default function IndexScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const staticStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
@@ -271,7 +290,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -284,7 +302,6 @@ const styles = StyleSheet.create({
   dateTimeButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
