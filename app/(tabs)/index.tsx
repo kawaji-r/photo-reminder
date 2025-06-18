@@ -34,6 +34,8 @@ export type PhotoReminder = {
   duration: number; // in minutes
   interval: number; // in minutes
   notificationIds: string[];
+  reminderTitle?: string;
+  reminderContent?: string;
 };
 
 const formatTime = (date: Date) => {
@@ -55,6 +57,8 @@ export default function IndexScreen() {
   const [duration, setDuration] = useState("30");
   const [interval, setInterval] = useState("5");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [reminderTitle, setReminderTitle] = useState("");
+  const [reminderContent, setReminderContent] = useState("");
   const [datePickerMode, setDatePickerMode] = useState<"date" | "time">("date");
 
   // Request permissions on app start
@@ -150,8 +154,8 @@ export default function IndexScreen() {
 
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: "写真を撮る時間です！",
-          body: "タップしてカメラを開きます",
+          title: reminderTitle ? reminderTitle : "写真を撮る時間です！",
+          body: reminderContent ? reminderContent : "タップしてカメラを開きます",
           sound: true,
         },
         trigger: {
@@ -170,6 +174,8 @@ export default function IndexScreen() {
       duration: durationMinutes,
       interval: intervalMinutes,
       notificationIds,
+      reminderTitle: reminderTitle,
+      reminderContent: reminderContent,
     };
 
     try {
@@ -305,7 +311,26 @@ export default function IndexScreen() {
             placeholder="5"
           />
         </View>
-
+        <View style={staticStyles.formGroup}>
+          <ThemedText style={staticStyles.label}>リマインダータイトル:</ThemedText>
+          <TextInput
+            testID="reminderTitle-input"
+            style={[staticStyles.input, dynamicStyles.input]}
+            value={reminderTitle}
+            onChangeText={setReminderTitle}
+            placeholder="例: 友人と食事"
+          />
+        </View>
+        <View style={staticStyles.formGroup}>
+          <ThemedText style={staticStyles.label}>リマインダー内容:</ThemedText>
+          <TextInput
+            testID="reminderContent-input"
+            style={[staticStyles.input, dynamicStyles.input]}
+            value={reminderContent}
+            onChangeText={setReminderContent}
+            placeholder="例: 滅多に会えない友達だから写真を忘れずに！"
+          />
+        </View>
         <Button title="リマインダーを設定" onPress={schedulePhotoReminders} />
       </ScrollView>
     </ThemedView>

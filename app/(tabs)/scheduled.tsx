@@ -94,6 +94,12 @@ export default function ScheduledScreen() {
           {startTimeStr}
           {"\n"}〜 {endTimeStr}
         </ThemedText>
+        {item.reminderTitle ? (
+          <ThemedText style={styles.reminderTitle}>{item.reminderTitle}</ThemedText>
+        ) : null}
+        {item.reminderContent ? (
+          <ThemedText style={styles.reminderContent}>{item.reminderContent}</ThemedText>
+        ) : null}
         <ThemedText>合計時間: {item.duration}分</ThemedText>
         <ThemedText>通知間隔: {item.interval}分ごと</ThemedText>
         <ThemedText style={styles.deleteHint}>(長押しで削除)</ThemedText>
@@ -150,6 +156,15 @@ const styles = StyleSheet.create({
   emptyMessage: {
     textAlign: "center",
     marginTop: 40,
+  },
+  reminderTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 4,
+  },
+  reminderContent: {
+    fontSize: 14,
+    marginTop: 2,
   },
   deleteHint: {
     fontSize: 12,
