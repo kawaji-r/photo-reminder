@@ -25,7 +25,15 @@ export default function ScheduledScreen() {
           startTime: new Date(reminder.startTime),
         }));
 
-        setReminders(processedReminders);
+        // Filter out reminders that have already ended
+        const currentTime = new Date();
+        const activeReminders = processedReminders.filter((reminder) => {
+          const endTime = new Date(reminder.startTime);
+          endTime.setMinutes(endTime.getMinutes() + reminder.duration);
+          return endTime > currentTime;
+        });
+
+        setReminders(activeReminders);
       }
     } catch (error) {
       console.error("Failed to load reminders:", error);
