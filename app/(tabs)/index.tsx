@@ -176,6 +176,7 @@ export default function IndexScreen() {
   );
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor({ light: "#ddd", dark: "#333" }, "border");
+  const placeholderColor = useThemeColor({ light: "#aaa", dark: "#666" }, "text");
 
   // Create dynamic styles
   const dynamicStyles = {
@@ -255,6 +256,7 @@ export default function IndexScreen() {
             onChangeText={setDuration}
             keyboardType="number-pad"
             placeholder="30"
+            placeholderTextColor={placeholderColor}
           />
         </View>
 
@@ -266,6 +268,7 @@ export default function IndexScreen() {
             onChangeText={setInterval}
             keyboardType="number-pad"
             placeholder="5"
+            placeholderTextColor={placeholderColor}
           />
         </View>
         <View style={staticStyles.formGroup}>
@@ -276,6 +279,7 @@ export default function IndexScreen() {
             value={reminderTitle}
             onChangeText={setReminderTitle}
             placeholder="例: 友人と食事"
+            placeholderTextColor={placeholderColor}
           />
         </View>
         <View style={staticStyles.formGroup}>
@@ -286,6 +290,7 @@ export default function IndexScreen() {
             value={reminderContent}
             onChangeText={setReminderContent}
             placeholder="例: 滅多に会えない友達だから写真を忘れずに！"
+            placeholderTextColor={placeholderColor}
           />
         </View>
         <Button title="リマインダーを設定" onPress={schedulePhotoReminders} />
