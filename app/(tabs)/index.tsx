@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
-import * as Camera from "expo-camera";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -72,51 +71,10 @@ export default function IndexScreen() {
           "写真リマインダーを使用するには通知の許可が必要です。"
         );
       }
-
-      const { status: cameraStatus } =
-        await Camera.requestCameraPermissionsAsync();
-      if (cameraStatus !== "granted") {
-        Alert.alert(
-          "カメラの許可が必要です",
-          "写真リマインダーを使用するにはカメラの許可が必要です。"
-        );
-      }
     }
 
     requestPermissions();
-
-    // Set up notification response handler
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        // Open camera when notification is tapped
-        openCamera();
-      }
-    );
-
-    return () => {
-      subscription.remove();
-    };
   }, []);
-
-  const openCamera = async () => {
-    if (Platform.OS === "web") {
-      alert("カメラ機能はモバイルデバイスでのみ利用可能です");
-      return;
-    }
-
-    const { status } = await Camera.requestCameraPermissionsAsync();
-    if (status === "granted") {
-      // On mobile, we can use expo-camera to open the camera
-      await Camera.openCameraAsync({
-        quality: 1,
-      });
-    } else {
-      Alert.alert(
-        "カメラの許可が必要です",
-        "写真を撮るにはカメラの許可が必要です。"
-      );
-    }
-  };
 
   const schedulePhotoReminders = async () => {
     // Validate inputs
@@ -155,7 +113,7 @@ export default function IndexScreen() {
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: reminderTitle ? reminderTitle : "写真を撮る時間です！",
-          body: reminderContent ? reminderContent : "タップしてカメラを開きます",
+          body: reminderContent ? reminderContent : "忘れずに想い出を残しましょう！",
           sound: true,
         },
         trigger: {
@@ -180,8 +138,7 @@ export default function IndexScreen() {
 
     try {
       // Get existing reminders
-      const existingRemindersJson =
-        await AsyncStorage.getItem("photoReminders");
+      const existingRemindersJson = await AsyncStorage.getItem("photoReminders");
       const existingReminders: PhotoReminder[] = existingRemindersJson
         ? JSON.parse(existingRemindersJson)
         : [];
@@ -205,7 +162,7 @@ export default function IndexScreen() {
     }
   };
 
-  const onChangeDate = (event: any, selectedDate?: Date) => {
+  const onChangeDate = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setStartTime(selectedDate);
