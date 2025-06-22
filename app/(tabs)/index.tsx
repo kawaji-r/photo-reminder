@@ -278,7 +278,7 @@ export default function IndexScreen() {
             style={[staticStyles.input, dynamicStyles.input]}
             value={reminderTitle}
             onChangeText={setReminderTitle}
-            placeholder="例: 友人と食事"
+            placeholder="例: 友だちとご飯"
             placeholderTextColor={placeholderColor}
           />
         </View>
@@ -289,7 +289,7 @@ export default function IndexScreen() {
             style={[staticStyles.input, dynamicStyles.input]}
             value={reminderContent}
             onChangeText={setReminderContent}
-            placeholder="例: 滅多に会えない友達だから写真を忘れずに！"
+            placeholder="例: なかなか会えないから絶対に写真を忘れない！"
             placeholderTextColor={placeholderColor}
           />
         </View>
