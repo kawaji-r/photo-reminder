@@ -5,8 +5,10 @@ import * as Notifications from "expo-notifications";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { PhotoReminder } from "./index";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function ScheduledScreen() {
+  const { t, formatString } = useLanguage();
   const [reminders, setReminders] = useState<PhotoReminder[]>([]);
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function ScheduledScreen() {
       }
     } catch (error) {
       console.error("Failed to load reminders:", error);
-      Alert.alert("エラー", "リマインダーの読み込みに失敗しました");
+      Alert.alert(t("error"), t("loadError"));
     }
   };
 
@@ -59,18 +61,18 @@ export default function ScheduledScreen() {
       );
     } catch (error) {
       console.error("Failed to delete reminder:", error);
-      Alert.alert("エラー", "リマインダーの削除に失敗しました");
+      Alert.alert(t("error"), t("deleteError"));
     }
   };
 
   const confirmDelete = (reminder: PhotoReminder) => {
     Alert.alert(
-      "リマインダーを削除",
-      "本当にこのリマインダーを削除しますか？",
+      t("deleteReminder"),
+      t("deleteConfirm"),
       [
-        { text: "キャンセル", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "削除",
+          text: t("delete"),
           style: "destructive",
           onPress: () => deleteReminder(reminder),
         },
@@ -108,9 +110,9 @@ export default function ScheduledScreen() {
         {item.reminderContent ? (
           <ThemedText style={styles.reminderContent}>{item.reminderContent}</ThemedText>
         ) : null}
-        <ThemedText>合計時間: {item.duration}分</ThemedText>
-        <ThemedText>通知間隔: {item.interval}分ごと</ThemedText>
-        <ThemedText style={styles.deleteHint}>(長押しで削除)</ThemedText>
+        <ThemedText>{formatString(t("totalDurationDisplay"), item.duration.toString())}</ThemedText>
+        <ThemedText>{formatString(t("intervalDisplay"), item.interval.toString())}</ThemedText>
+        <ThemedText style={styles.deleteHint}>{t("deleteHint")}</ThemedText>
       </TouchableOpacity>
     );
   };
@@ -118,12 +120,12 @@ export default function ScheduledScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.title}>
-        設定済みリマインダー
+        {t("scheduledReminders")}
       </ThemedText>
 
       {reminders.length === 0 ? (
         <ThemedText style={styles.emptyMessage}>
-          設定済みのリマインダーはありません
+          {t("noReminders")}
         </ThemedText>
       ) : (
         <FlatList

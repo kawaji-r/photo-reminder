@@ -1,0 +1,11 @@
+- 以下についてのアイコンを設定して
+    - アプリそのもののロゴ。アプリストアで表示されるもの。
+        - `assets/images/logo.png`
+    - スプラッシュアイコン
+        - `assets/images/logo.png`
+    - `./(tabs)/index.tsx`のタブアイコン
+        - `assets/images/setting.svg`
+    - `./(tabs)/scheduled.tsx`のタブアイコン
+        - `assets/images/list.svg`
+- `react-native-svg`を使って。
+- PureComponentにして。 
