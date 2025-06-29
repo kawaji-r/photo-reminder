@@ -9,6 +9,7 @@ import {
   Alert,
   Pressable,
   TouchableOpacity,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useLanguage } from "@/app/context/LanguageContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -62,7 +63,7 @@ export default function IndexScreen() {
   const [reminderTitle, setReminderTitle] = useState("");
   const [reminderContent, setReminderContent] = useState("");
   const [datePickerMode, setDatePickerMode] = useState<"date" | "time">("date");
-  
+
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'jp' : 'en');
   };
@@ -206,118 +207,128 @@ export default function IndexScreen() {
 
   return (
     <ThemedView style={staticStyles.container}>
-      <ScrollView contentContainerStyle={staticStyles.scrollContent}>
-        <View style={staticStyles.titleContainer}>
-          <ThemedText type="title" style={staticStyles.title}>
-            {t("photoReminderSettings")}
-          </ThemedText>
-          <TouchableOpacity 
-            style={staticStyles.languageToggle}
-            onPress={toggleLanguage}
-          >
-            <ThemedText style={staticStyles.languageText}>
-              {language === 'en' ? 'EN' : 'JP'}
+      {/* キーボードが画面を隠す問題を解消 */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.select({ ios: 'padding', android: undefined })}
+        keyboardVerticalOffset={Platform.select({ ios: 64, android: 0 })}
+      >
+        <ScrollView
+          contentContainerStyle={staticStyles.scrollContent}
+          keyboardShouldPersistTaps="never"
+        >
+          <View style={staticStyles.titleContainer}>
+            <ThemedText type="title" style={staticStyles.title}>
+              {t("photoReminderSettings")}
             </ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        <View style={staticStyles.formGroup}>
-          <ThemedText style={staticStyles.label}>{t("startDateTime")}</ThemedText>
-          <View style={staticStyles.dateTimeRow}>
-            <Pressable
-              onPress={() => {
-                setDatePickerMode("date");
-                setShowDatePicker(true);
-              }}
+            <TouchableOpacity
+              style={staticStyles.languageToggle}
+              onPress={toggleLanguage}
             >
-              <ThemedView
-                style={[
-                  staticStyles.dateTimeButton,
-                  dynamicStyles.dateTimeButton,
-                ]}
-              >
-                <ThemedText style={staticStyles.dateTimeText}>
-                  {startTime.toLocaleDateString()}
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setDatePickerMode("time");
-                setShowDatePicker(true);
-              }}
-            >
-              <ThemedView
-                style={[
-                  staticStyles.dateTimeButton,
-                  dynamicStyles.dateTimeButton,
-                ]}
-              >
-                <ThemedText style={staticStyles.dateTimeText}>
-                  {formatTime(startTime)}
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
+              <ThemedText style={staticStyles.languageText}>
+                {language === 'en' ? 'EN' : 'JP'}
+              </ThemedText>
+            </TouchableOpacity>
           </View>
-          {showDatePicker && (
-            <DateTimePicker
-              value={startTime}
-              mode={datePickerMode}
-              is24Hour={true}
-              display="default"
-              onChange={onChangeDate}
+
+          <View style={staticStyles.formGroup}>
+            <ThemedText style={staticStyles.label}>{t("startDateTime")}</ThemedText>
+            <View style={staticStyles.dateTimeRow}>
+              <Pressable
+                onPress={() => {
+                  setDatePickerMode("date");
+                  setShowDatePicker(true);
+                }}
+              >
+                <ThemedView
+                  style={[
+                    staticStyles.dateTimeButton,
+                    dynamicStyles.dateTimeButton,
+                  ]}
+                >
+                  <ThemedText style={staticStyles.dateTimeText}>
+                    {startTime.toLocaleDateString()}
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setDatePickerMode("time");
+                  setShowDatePicker(true);
+                }}
+              >
+                <ThemedView
+                  style={[
+                    staticStyles.dateTimeButton,
+                    dynamicStyles.dateTimeButton,
+                  ]}
+                >
+                  <ThemedText style={staticStyles.dateTimeText}>
+                    {formatTime(startTime)}
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+            </View>
+            {showDatePicker && (
+              <DateTimePicker
+                value={startTime}
+                mode={datePickerMode}
+                is24Hour={true}
+                display="default"
+                onChange={onChangeDate}
+              />
+            )}
+          </View>
+
+          <View style={staticStyles.formGroup}>
+            <ThemedText style={staticStyles.label}>{t("totalDuration")}</ThemedText>
+            <TextInput
+              testID="duration-input"
+              style={[staticStyles.input, dynamicStyles.input]}
+              value={duration}
+              onChangeText={setDuration}
+              keyboardType="number-pad"
+              placeholder="30"
+              placeholderTextColor={placeholderColor}
             />
-          )}
-        </View>
+          </View>
 
-        <View style={staticStyles.formGroup}>
-          <ThemedText style={staticStyles.label}>{t("totalDuration")}</ThemedText>
-          <TextInput
-            testID="duration-input"
-            style={[staticStyles.input, dynamicStyles.input]}
-            value={duration}
-            onChangeText={setDuration}
-            keyboardType="number-pad"
-            placeholder="30"
-            placeholderTextColor={placeholderColor}
-          />
-        </View>
-
-        <View style={staticStyles.formGroup}>
-          <ThemedText style={staticStyles.label}>{t("notificationInterval")}</ThemedText>
-          <TextInput
-            style={[staticStyles.input, dynamicStyles.input]}
-            value={interval}
-            onChangeText={setInterval}
-            keyboardType="number-pad"
-            placeholder="5"
-            placeholderTextColor={placeholderColor}
-          />
-        </View>
-        <View style={staticStyles.formGroup}>
-          <ThemedText style={staticStyles.label}>{t("reminderTitle")}</ThemedText>
-          <TextInput
-            testID="reminderTitle-input"
-            style={[staticStyles.input, dynamicStyles.input]}
-            value={reminderTitle}
-            onChangeText={setReminderTitle}
-            placeholder={t("titlePlaceholder")}
-            placeholderTextColor={placeholderColor}
-          />
-        </View>
-        <View style={staticStyles.formGroup}>
-          <ThemedText style={staticStyles.label}>{t("reminderContent")}</ThemedText>
-          <TextInput
-            testID="reminderContent-input"
-            style={[staticStyles.input, dynamicStyles.input]}
-            value={reminderContent}
-            onChangeText={setReminderContent}
-            placeholder={t("contentPlaceholder")}
-            placeholderTextColor={placeholderColor}
-          />
-        </View>
-        <Button title={t("setReminder")} onPress={schedulePhotoReminders} />
-      </ScrollView>
+          <View style={staticStyles.formGroup}>
+            <ThemedText style={staticStyles.label}>{t("notificationInterval")}</ThemedText>
+            <TextInput
+              style={[staticStyles.input, dynamicStyles.input]}
+              value={interval}
+              onChangeText={setInterval}
+              keyboardType="number-pad"
+              placeholder="5"
+              placeholderTextColor={placeholderColor}
+            />
+          </View>
+          <View style={staticStyles.formGroup}>
+            <ThemedText style={staticStyles.label}>{t("reminderTitle")}</ThemedText>
+            <TextInput
+              testID="reminderTitle-input"
+              style={[staticStyles.input, dynamicStyles.input]}
+              value={reminderTitle}
+              onChangeText={setReminderTitle}
+              placeholder={t("titlePlaceholder")}
+              placeholderTextColor={placeholderColor}
+            />
+          </View>
+          <View style={staticStyles.formGroup}>
+            <ThemedText style={staticStyles.label}>{t("reminderContent")}</ThemedText>
+            <TextInput
+              testID="reminderContent-input"
+              style={[staticStyles.input, dynamicStyles.input]}
+              value={reminderContent}
+              onChangeText={setReminderContent}
+              placeholder={t("contentPlaceholder")}
+              placeholderTextColor={placeholderColor}
+            />
+          </View>
+          <Button title={t("setReminder")} onPress={schedulePhotoReminders} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

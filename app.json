@@ -14,7 +14,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive_foreground.png",
-        "backgroundColor": "./assets/images/adaptive_background.png"
+        "backgroundColor": "./assets/images/adaptive_background.png",
+        "softwareKeyboardLayoutMode": "adjustResize"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.kawaji1990.photoreminder"
@@ -29,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.png",
+          "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
