@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
@@ -11,11 +11,7 @@ export default function ScheduledScreen() {
   const { t, formatString } = useLanguage();
   const [reminders, setReminders] = useState<PhotoReminder[]>([]);
 
-  useEffect(() => {
-    loadReminders();
-  }, []);
-
-  const loadReminders = async () => {
+  const loadReminders = useCallback(async () => {
     try {
       const remindersJson = await AsyncStorage.getItem("photoReminders");
       if (remindersJson) {
@@ -41,7 +37,11 @@ export default function ScheduledScreen() {
       console.error("Failed to load reminders:", error);
       Alert.alert(t("error"), t("loadError"));
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadReminders();
+  }, [loadReminders]);
 
   const deleteReminder = async (reminder: PhotoReminder) => {
     try {

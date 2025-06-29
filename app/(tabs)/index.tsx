@@ -82,7 +82,7 @@ export default function IndexScreen() {
     }
 
     requestPermissions();
-  }, []);
+  }, [t]);
 
   const schedulePhotoReminders = async () => {
     // Validate inputs

@@ -2,7 +2,6 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import ScheduledScreen from '../scheduled';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 
 // Mock AsyncStorage and Notifications
 jest.mock('@react-native-async-storage/async-storage');

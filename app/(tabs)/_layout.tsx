@@ -31,14 +31,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: language == 'en' ? 'SETTING' : '設定',
+          title: language === 'en' ? 'SETTING' : '設定',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="gear" color={color} />,
         }}
       />
       <Tabs.Screen
         name="scheduled"
         options={{
-          title: language == 'en' ? 'LIST' : '一覧',
+          title: language === 'en' ? 'LIST' : '一覧',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
         }}
       />
